@@ -2,6 +2,7 @@
 NSE Ticker Statistics Report Generator
 """
 
+import os
 import yfinance as yf
 import pandas as pd 
 import numpy as np
@@ -45,11 +46,12 @@ def currentTickerPrice(df):
 
     columns = list(filter(lambda x: x[0] == 'Close', df.columns))
 
-    return df[columns].droplevel(axis=1, level=0)\
-                .mean()\
+    return df[columns]\
+                .ffill()\
+                .droplevel(axis=1, level=0)\
+                .iloc[-30: ].mean()\
                 .rename('Last 1d Avg Close (INR)')
     
-
 """
 MAIN
 """
@@ -98,7 +100,12 @@ report = ticker_metadata_df[['SYMBOL', 'NAME OF COMPANY']]\
                 .reset_index(drop=True) 
 
 report_datetime = str(CD.date()) + '-' + ''.join(str(CD.time()).split(':')[:2])
-report_filename = 'REPORTS\\NSE_TICKER_STATS_{}.xlsx'.format(report_datetime)
+
+report_path = 'REPORTS'
+if not os.path.exists(report_path):
+    os.makedirs(report_path)
+
+report_filename = report_path + '\\' + 'NSE_TICKER_STATS_{}.xlsx'.format(report_datetime)
 
 report.to_excel(report_filename, engine='xlsxwriter')
 
